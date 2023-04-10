@@ -44,8 +44,8 @@ export class Lexer {
       }
 
       // Argument
-      if (/^[a-z\._\-]+/.test(this.#rest())) {
-        const arg = this.#rest().match(/^[a-z\._\-]+/)![0];
+      if (/^[^\s\t\n"=]+/.test(this.#rest())) {
+        const arg = this.#rest().match(/^[^\s\t\n"=]+/)![0];
 
         console.log(arg);
 

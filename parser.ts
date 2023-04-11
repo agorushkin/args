@@ -22,7 +22,7 @@ export class Parser {
       }
       
       if (type === TOKEN_TYPE.FLAG_LONG) {
-        const value = this.#peek().type === TOKEN_TYPE.ARGUMENT ? this.#peek().value as string : true;
+        const value = this.#peek()?.type === TOKEN_TYPE.ARGUMENT ? this.#peek().value as string : true;
         
         result.push({ key: this.#at().value as string, value });
         this.#cursor += value === true ? 1 : 2;

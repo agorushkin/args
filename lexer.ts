@@ -16,7 +16,7 @@ export class Lexer {
     this.#stream = exp;
 
     while (this.#cursor <= this.#stream.length) {
-      if (this.#cursor + 1 >= this.#stream.length) {
+      if (this.#cursor >= this.#stream.length) {
         tokens.push({ type: TOKEN_TYPE.EOF, value: null });
         break;
       }
@@ -35,7 +35,7 @@ export class Lexer {
       }
 
       // Long Flag
-      if (/^\-{2}[a-zA-Z]+([\s\t\n=]|$)/.test(this.#rest())) {
+      if (/^\-{2}[a-zA-Z]+([\s\t=]|$)/.test(this.#rest())) {
         const flag = this.#rest().match(/^\-\-[a-zA-Z]+/)![0].slice(2);
         tokens.push({ type: TOKEN_TYPE.FLAG_LONG, value: flag });
         this.#cursor += flag.length + 2;

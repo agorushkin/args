@@ -1,17 +1,19 @@
-import { Lexer } from './lexer.ts';
-import { Parser } from './parser.ts';
+import { tokenize } from './lib/tokenize.ts';
+import { parse } from './lib/parse.ts';
 
-import { ParseResultItem } from './types.ts';
+import { ParsedToken, Result } from './types.ts';
 
-export const parse = (exp: string): [ ParseResultItem[], null ] | [ null, Error ] => {
-  const lexer = new Lexer();
-  const parser = new Parser();
+const parser = (
+  exp: string,
+): Result<ParsedToken[]> => {
   try {
-    const tokens = lexer.tokenize(exp);
-    const result = parser.parse(tokens);
+    const tokens = tokenize(exp);
+    const value = parse(tokens);
 
-    return [ result, null ];
+    return { ok: true, value, error: null };
   } catch (error) {
-    return [ null, error ];
+    return { ok: false, value: null, error };
   }
 };
+
+export { parser as parse };

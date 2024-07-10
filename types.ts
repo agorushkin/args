@@ -1,18 +1,26 @@
-export enum TOKEN_TYPE {
+export enum TokenType {
   EOF = 'EOF',
-
-  FLAG_SHORT = 'FLAG_SHORT',
-  FLAG_LONG = 'FLAG_LONG',
-
+  OP_SHORT = 'OP_SHORT',
+  OP_LONG = 'OP_LONG',
   ARGUMENT = 'ARGUMENT',
 }
 
-export interface Token {
-  type: TOKEN_TYPE;
+export type Token = {
+  type: TokenType;
   value: string | null;
-}
+};
 
-export interface ParseResultItem {
+export type ParsedToken = {
   key?: string;
   value: string | boolean;
-}
+};
+
+export type Result<V, E = Error> = {
+  ok: true;
+  value: V;
+  error: null;
+} | {
+  ok: false;
+  value: null;
+  error: E;
+};

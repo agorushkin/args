@@ -11,7 +11,7 @@ parse(exp: string): Result;
 ### Example
 
 ```ts
-import { parse } from 'x/flags';
+import { parse } from 'x/args';
 
 const args = parse('command --key=value -ab');
 

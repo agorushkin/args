@@ -54,7 +54,7 @@ console.log(args);
 ## 🛠️ Contribution
 
 Feel free to open an issue or a pull request if you have any suggestions or
-changes you'd like to see. I would very much appreacite it. Leaving a star is
+changes you'd like to see. I would very much appreciate it. Leaving a star is
 also a great way to show your support.
 
 Made with ❤️ by [agorushkin](https://github.com/agorushkin)

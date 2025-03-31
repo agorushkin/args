@@ -12,7 +12,7 @@ const parser = (
 
     return { ok: true, value, error: null };
   } catch (error) {
-    return { ok: false, value: null, error };
+    return { ok: false, value: null, error: error as Error };
   }
 };
 

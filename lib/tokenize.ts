@@ -1,116 +1,133 @@
 import { Token, TokenType } from '../types.ts';
 
+const OP_CHARS = new Set(
+  [...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-'],
+);
+const SPACES = new Set([' ', '\t', '\n', '\r']);
+const ENDINGS = new Set([' ', '=']);
+const QUOTES = new Set(['"', `'`, '`']);
+const ESCAPABLE = new Set(['\\', ...QUOTES]);
+
 export const tokenize = (exp: string): Token[] => {
-  const at = () => exp[cursor];
-  const rest = () => exp.slice(cursor);
   const tokens: Token[] = [];
+
+  const at = (overhead = 0) => exp[cursor + overhead];
+  const advance = (amount = 1) => cursor += amount;
+  const consumed = () => cursor >= exp.length;
 
   let terminated = false;
   let cursor = 0;
 
   while (cursor <= exp.length) {
-    if (cursor >= exp.length) {
+    if (consumed()) {
       tokens.push({ type: TokenType.EOF, value: null });
       break;
     }
 
-    if (/\s/.test(at())) {
-      cursor++;
+    // Skipping
+    if (SPACES.has(at())) {
+      advance();
       continue;
     }
 
-    if (!terminated && /^\-[a-zA-Z0-9]+/.test(rest())) {
-      cursor++;
+    // Reading long op or op terminator
+    if (!terminated && at() === '-' && at(1) === '-') {
+      advance(2);
+      let value = '';
 
-      while (/[^\s=]/.test(at())) {
+      if (ENDINGS.has(at())) {
+        tokens.push({ type: TokenType.ARGUMENT, value: '--' });
+        terminated = true;
+        continue;
+      }
+
+      while (!ENDINGS.has(at())) {
+        if (consumed()) break;
+
+        if (!OP_CHARS.has(at())) {
+          throw new SyntaxError(
+            `Used non-alphanumeric character on long option at ${cursor}`,
+          );
+        }
+
+        value += at();
+        advance();
+      }
+
+      tokens.push({ type: TokenType.OP_LONG, value });
+      if (at() === '=') advance();
+      continue;
+    }
+
+    // Reading short op
+    if (!terminated && at() === '-') {
+      advance();
+
+      while (!ENDINGS.has(at())) {
         if (cursor >= exp.length) break;
 
-        if (!/[a-zA-Z0-9]/.test(at())) {
+        if (!OP_CHARS.has(at()) && at() || at() === '-') {
           throw new SyntaxError(
             `Used non-alphanumeric character on short option at ${cursor}`,
           );
         }
 
         tokens.push({ type: TokenType.OP_SHORT, value: at() });
-        cursor++;
+        advance();
       }
 
-      if (at() === '=') cursor++;
       continue;
     }
 
-    if (!terminated && /^\-{2}[\-a-zA-Z0-9]+/.test(rest())) {
-      cursor += 2;
-      let flag = '';
-
-      while (/[^\s=]/.test(at())) {
-        if (cursor >= exp.length) break;
-
-        if (!/[\-a-zA-Z0-9]/.test(at())) {
-          throw new SyntaxError(
-            `Used non-alphanumeric character on long option at ${cursor}`,
-          );
-        }
-
-        flag += at();
-        cursor++;
-      }
-
-      tokens.push({ type: TokenType.OP_LONG, value: flag });
-      if (at() === '=') cursor++;
-      continue;
-    }
-
+    // Reading arguments
     let arg = '';
     let style = '';
     let escaped = false;
     while (true) {
-      if (cursor >= exp.length) {
+      if (consumed()) {
         if (style.length) throw new SyntaxError('Unterminated string');
         break;
       }
 
       if (escaped) {
-        if (/\\/.test(at())) arg += at();
-        else if (/\s/.test(at())) arg += at();
-        else if (/["'`]/.test(at())) arg += at();
+        if (ESCAPABLE.has(at())) arg += at();
 
         escaped = false;
-        cursor++;
+        advance();
         continue;
       }
 
-      if (/\\/.test(at())) {
+      if (at() == '\\') {
         escaped = true;
-        cursor++;
+        advance();
         continue;
       }
 
-      if (/\s/.test(at())) {
+      if (at() === ' ') {
         if (!style.length) {
-          cursor++;
+          advance();
           break;
-        } else {
-          arg += at();
-          cursor++;
-          continue;
         }
+
+        arg += at();
+        advance();
+        continue;
       }
 
-      if (style.length === 0 && /["'`]/.test(at())) {
+      if (style.length === 0 && QUOTES.has(at())) {
         style = at();
-        cursor++;
+        advance();
         continue;
       }
 
       if (style.length && at() === style) {
         style = '';
-        cursor++;
+        advance();
         continue;
       }
 
       arg += at();
-      cursor++;
+      advance();
     }
 
     if (arg === '--') terminated = true;
